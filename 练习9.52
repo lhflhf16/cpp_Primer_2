@@ -1,0 +1,234 @@
+#ifndef __TEST_9_52_H__
+#define __TEST_9_52_H__
+
+#include <stack>
+#include <iostream>
+#include <stdexcept>
+using namespace std;
+
+struct obj{
+	enum obj_type{LP,RP,ADD,SUB,VAL};//表示obj的类型
+
+	obj(obj_type t, double v = 0) :_t(t), _v(v){}
+	obj_type _t;
+	double _v;
+};
+
+//当数据准备压栈时
+inline void push_val(stack<obj> &so, double v)
+{
+	//test
+	cout << "数据压栈" << endl;
+	//test
+
+	//当空栈或者栈顶为左括号时，直接将数据压入栈中
+	if (so.empty() || so.top()._t == obj::LP)
+	{
+		so.push(obj(obj::VAL, v));
+
+		//test
+		cout << "push " << v << endl;
+		//test
+	}
+	//当栈顶为加减号时
+	else if (so.top()._t == obj::ADD || so.top()._t == obj::SUB)
+	{
+		//保留栈顶的运算符号
+		obj::obj_type type = so.top()._t;
+		//弹出运算符号
+		so.pop();
+		
+		//test
+		if (type == obj::ADD)
+			cout << "pop +" << endl;
+		else
+			cout << "pop -" << endl;
+		//test
+
+		//执行运算
+		//如果当前栈顶不是VAL,则抛出错误
+		if (so.top()._t != obj::VAL)
+		{
+			throw invalid_argument("缺少运算数");
+		}
+		//栈顶是VAL，则进行运算
+		else if (type == obj::ADD)
+		{
+			//保留数据
+			double val = so.top()._v;
+			//数据相加
+			v += so.top()._v;
+			//弹出VAL
+			so.pop();
+
+			//test
+			cout << "pop " << val << endl;
+			//test
+
+			//压入新VAL
+			so.push(obj(obj::VAL, v));
+			
+			//test
+			cout << "push " << v << endl;
+			//test
+		}
+		else if (type == obj::SUB)
+		{
+			//保留数据
+			double val = so.top()._v;
+			//数据相减,注意减的顺序
+			v = so.top()._v - v;
+			//弹出VAL
+			so.pop();
+
+			//test
+			cout << "pop " << val << endl;
+			//test
+
+			//压入新VAL
+			so.push(obj(obj::VAL, v));
+
+			//test
+			cout << "push " << v << endl;
+			//test
+		}
+	}
+	//剩下就是栈顶为VAL/RP，抛出错误
+	else
+	{
+		throw invalid_argument("缺少运算符");
+	}
+
+	//test
+	cout << "数据结束压栈" << endl;
+	//test
+
+}
+
+//当左括号准备压栈时
+inline void push_lp(stack<obj> &so)
+{
+	//test
+	cout << "左括号压栈" << endl;
+	//test
+
+	//只要栈顶不为VAL/RP直接压栈（RP其实也是VAL，因为栈中不会出现RP，当RP压栈成功，它一定会和它对应的LP变成数据VAL）
+	if (so.empty() || so.top()._t != obj::VAL)
+	{
+		so.push(obj(obj::LP));
+		
+		//test
+		cout << "push (" << endl;
+		//test
+	}
+	else
+	{
+		throw invalid_argument("左括号前不能是数据");
+	}
+
+	//test
+	cout << "左括号结束压栈" << endl;
+	//test
+}
+
+//当右括号准备压栈
+inline void push_rp(stack<obj> &so)
+{
+	//test
+	cout << "右括号压栈" << endl;
+	//test
+
+	//空，抛出错误
+	if (so.empty())
+	{
+		throw invalid_argument("未匹配右括号");
+	}
+	//栈顶为数据
+	else if (so.top()._t == obj::VAL)
+	{
+		//保留数据
+		double v = so.top()._v;
+		//弹出数据
+		so.pop();
+
+		//test
+		cout << "pop " << v << endl;
+		//test
+
+		//新栈顶必须是左括号(左右括号相消只剩中间的数据)
+		if (so.empty() || so.top()._t != obj::LP)
+		{
+			throw invalid_argument("未匹配右括号");
+		}
+		else
+		{
+			//弹出左括号
+			so.pop();
+
+			//test
+			cout << "pop (" << endl;
+			//test
+
+			//压入数据
+			push_val(so, v);
+		}
+	}
+	//栈顶是左括号
+	else if (so.top()._t==obj::LP)
+	{
+		throw invalid_argument("空括号");
+	}
+	//栈顶是运算符
+	else
+	{
+		throw invalid_argument("括号前是运算符");
+	}
+
+	//test
+	cout << "右括号压栈结束" << endl;
+	//test
+}
+
+//当运算符准备压栈
+inline void push_operator(stack<obj> &so,char oper)
+{
+	//test
+	cout << "运算符压栈" << endl;
+	//test
+
+	//当栈顶是数据，直接压栈
+	if (so.top()._t == obj::VAL)
+	{
+		if (oper == '+')
+		{
+			so.push(obj(obj::ADD));
+			
+			//test
+			cout << "push +" << endl;
+			//test
+		}
+		else if (oper == '-')
+		{
+			so.push(obj(obj::SUB));
+
+			//test
+			cout << "push -" << endl;
+			//test
+		}
+		else
+		{
+			throw invalid_argument("运算符错误");
+		}
+	}
+
+	//test
+	cout << "运算符压栈结束" << endl;
+	//test
+}
+
+//从字符串获取运算对象
+inline void skipws(const string &s, size_t &pos)
+{
+	pos = s.find_first_not_of(' ', pos);
+}
+#endif
