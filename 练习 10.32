@@ -1,0 +1,31 @@
+int main()
+{
+	vector<Sales_data> v_sd;
+	istream_iterator<Sales_data> in_sd(cin), eof_sd;
+	copy(in_sd, eof_sd, back_inserter(v_sd));
+	sort(v_sd.begin(), v_sd.end(),
+		[](const Sales_data &sd1, const Sales_data &sd2)
+	{return sd1.isbn() < sd2.isbn(); });
+
+	if (!v_sd.empty())
+	{
+		auto front = v_sd.begin();//开始查找位置
+		auto back = front;//第一个不同的位置
+		Sales_data total = *front;//记录总数
+		//从开始查找位置寻找第一个isbn不等于total.isbn()的位置
+		while ((back = find_if(front, v_sd.end(), [total](const Sales_data &sd){return sd.isbn() != total.isbn(); })) != v_sd.end())
+		{
+			//从开始位置累加到第一个不同的位置，且初值的isbn与total相同，但是数值为零
+			total = accumulate(front, back, Sales_data(total.isbn()));
+			print(cout, total) << endl;
+			//将不同位置作为下一个total
+			total = *back;
+			//将不同位置作为下一次查找开始
+			front = back;
+		}
+		//输出最后的total
+		total = accumulate(front, back, Sales_data(total.isbn()));
+		print(cout, total) << endl;
+	}
+	return 0;
+}
