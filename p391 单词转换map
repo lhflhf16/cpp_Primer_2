@@ -1,0 +1,69 @@
+//建立关键字为缩写，关联数据为完整版的map
+map<string, string> buildMap(ifstream &infile)
+{
+	map<string, string> tmp;
+	//读取文件流中的一行
+	string line;
+	while (getline(infile, line))
+	{
+		//查找line中的第一个单词/字母
+		auto pos = line.find_first_of(' ');
+		//abbr 存放缩写; complete 存放完整
+		string abbr, complete;
+		if (pos != string::npos)
+		{
+			//将关键词abbr，关联数据complete插入tmp
+			abbr = line.substr(0, pos);
+			complete = line.substr(pos + 1);
+			auto Pair = tmp.insert({ abbr, complete });
+			//插入失败，说明abbr已经存在
+			if (!Pair.second)
+			{
+				cout << abbr << "已经存在" << endl;
+			}
+		}
+	}
+	return tmp;
+}
+
+//string s 存在map中则转换，否则啥也不做
+string& transform(string &s, const map<string, string> &m)
+{
+	//s存在map中,转换
+	auto iter = m.find(s);
+	if (iter != m.end())
+	{
+		s = iter->second;
+	}
+	return s;
+}
+
+//infile1 输入转换规则; infile2 输入将转换文本.
+void word_transform(ifstream &infile1, ifstream & infile2)
+{
+	//buildMap 根据infile1创建Map，并返回Map
+	auto transform_map = buildMap(infile1);
+
+	//读取infile2的一行
+	string line;
+	while (getline(infile2,line))
+	{
+		//创建字符串输入流，读取一行的每个单词
+		istringstream in_str(line);
+		string word;
+		while (in_str >> word)
+		{
+			//transform查找并转换word
+			cout << transform(word,transform_map) << ' ';
+		}
+		//一行结束，换行
+		cout << endl;
+	}
+}
+
+int main()
+{
+	ifstream rule("单词转换文件.txt"), text("单词输入文件.txt");
+	word_transform(rule, text);
+	return 0;
+}
